@@ -1,206 +1,183 @@
 .. _topics-dynamic-content:
 
 ====================================
-Selecting dynamically-loaded content
+选择动态加载的内容
 ====================================
 
-Some webpages show the desired data when you load them in a web browser.
-However, when you download them using Scrapy, you cannot reach the desired data
-using :ref:`selectors <topics-selectors>`.
+当你在网络浏览器中加载网页时，有些网页显示了所需的数据。
+然而，当你用Scrapy下载它们时，你使用 :ref:`selectors <topics-selectors>` 却无法得到所需的数据.
 
-When this happens, the recommended approach is to
-:ref:`find the data source <topics-finding-data-source>` and extract the data
-from it.
+当这种情况发生时，推荐的方法是 :ref:`找到数据源<topics-finding-data-source>` 并从中提取数据。
 
-If you fail to do that, and you can nonetheless access the desired data through
-the :ref:`DOM <topics-livedom>` from your web browser, see
-:ref:`topics-javascript-rendering`.
+如果你没有做到这一点，但你仍然可以通过 :ref:`DOM <topics-livedom>` 从你的网络浏览器
+访问所需的数据,请参阅 :ref:`topics-javascript-rendering` 。
 
 .. _topics-finding-data-source:
 
-Finding the data source
+寻找数据源
 =======================
 
-To extract the desired data, you must first find its source location.
+为了提取所需的数据，你必须首先找到它的源位置。
 
-If the data is in a non-text-based format, such as an image or a PDF document,
-use the :ref:`network tool <topics-network-tool>` of your web browser to find
-the corresponding request, and :ref:`reproduce it
-<topics-reproducing-requests>`.
+如果数据是基于非文本的格式，如图像或PDF文档。
+使用你的网络浏览器的 :ref:`network tool <topics-network-tool>` 来查找相应的请求，
+并 :ref:`复制请求 <topics-reproducing-requests>`。
 
-If your web browser lets you select the desired data as text, the data may be
-defined in embedded JavaScript code, or loaded from an external resource in a
-text-based format.
+如果你的网络浏览器允许你选择所需的数据作为文本，这些数据可能是在嵌入的JavaScript代码中定义，
+或者以基于文本的格式从外部资源加载。
 
-In that case, you can use a tool like wgrep_ to find the URL of that resource.
+在这种情况下，你可以使用像 wgrep_ 这样的工具来找到该资源的URL。
 
-If the data turns out to come from the original URL itself, you must
-:ref:`inspect the source code of the webpage <topics-inspecting-source>` to
-determine where the data is located.
+如果事实证明数据来自原始的URL本身，你必须 :ref:`检查网页的源代码<topics-inspecting-source>` 以确定数据的位置。
 
-If the data comes from a different URL, you will need to :ref:`reproduce the
-corresponding request <topics-reproducing-requests>`.
+如果数据来自一个不同的URL，你将需要 :ref:`复制相应的请求<topics-reproducing-requests>` 。
 
 .. _topics-inspecting-source:
 
-Inspecting the source code of a webpage
+检查网页的源代码
 =======================================
 
-Sometimes you need to inspect the source code of a webpage (not the
-:ref:`DOM <topics-livedom>`) to determine where some desired data is located.
+有时你需要检查一个网页的源代码（而不是 :ref:`DOM <topics-livedom>` ），以确定一些所需数据的位置。
 
-Use Scrapy’s :command:`fetch` command to download the webpage contents as seen
-by Scrapy::
+使用Scrapy的 :command:`fetch` 命令来下载网页的内容，就像Scrapy看到的那样的内容:
 
-    scrapy fetch --nolog https://example.com > response.html
+::
+  
+  scrapy fetch --nolog https://example.com > response.html
 
-If the desired data is in embedded JavaScript code within a ``<script/>``
-element, see :ref:`topics-parsing-javascript`.
+如果所需的数据是在 ``<script/>`` 元素内的嵌入式JavaScript代码中, 请参见 :ref:`topics-parsing-javascript` 。
 
-If you cannot find the desired data, first make sure it’s not just Scrapy:
-download the webpage with an HTTP client like curl_ or wget_ and see if the
-information can be found in the response they get.
+如果你找不到所需的数据，首先要确定不仅仅Scrapy是这样的。
+用 curl_ 或 wget_ 等HTTP客户端下载网页，看看是否能在它们的响应中找到该信息。
 
-If they get a response with the desired data, modify your Scrapy
-:class:`~scrapy.http.Request` to match that of the other HTTP client. For
-example, try using the same user-agent string (:setting:`USER_AGENT`) or the
-same :attr:`~scrapy.http.Request.headers`.
+如果他们得到一个带有所需数据的响应，请修改你的Scrapy :class:`~scrapy.http.Request` ，
+使之与其他HTTP客户端的匹配。例如尝试使用相同的用户代理字符串（ :setting:`USER_AGENT` ）或
+相同的 :attr:`~scrapy.http.Request.headers` 。
 
-If they also get a response without the desired data, you’ll need to take
-steps to make your request more similar to that of the web browser. See
-:ref:`topics-reproducing-requests`.
+如果他们也得到一个没有所需数据的响应，你需要采取措施，使你的请求与网络浏览器的请求更加相似。
+参见 :ref:`topics-reproducing-requests` 。
 
 .. _topics-reproducing-requests:
 
-Reproducing requests
+复制请求
 ====================
 
-Sometimes we need to reproduce a request the way our web browser performs it.
+有时我们需要按照我们的网络浏览器执行的方式来重现一个请求。
 
-Use the :ref:`network tool <topics-network-tool>` of your web browser to see
-how your web browser performs the desired request, and try to reproduce that
-request with Scrapy.
+使用你的网络浏览器的 :ref:`网络工具<topics-network-tool>` 来查看你的网络浏览器如何执行所需的请求,
+并尝试用Scrapy重现该请求。
 
-It might be enough to yield a :class:`~scrapy.http.Request` with the same HTTP
-method and URL. However, you may also need to reproduce the body, headers and
-form parameters (see :class:`~scrapy.http.FormRequest`) of that request.
+它可能足以yield一个 :class:`~scrapy.http.Request` ，具有相同的HTTP方法和URL。
+然而，你可能还需要重现body、headers和表单参数（见 :class:`~scrapy.http.FormRequest` ）的请求。
 
-As all major browsers allow to export the requests in `cURL
-<https://curl.haxx.se/>`_ format, Scrapy incorporates the method
-:meth:`~scrapy.http.Request.from_curl()` to generate an equivalent
-:class:`~scrapy.http.Request` from a cURL command. To get more information
-visit :ref:`request from curl <requests-from-curl>` inside the network
-tool section.
+由于所有主要的浏览器都允许以 `cURL <https://curl.haxx.se/>`_ 格式的请求，
+Scrapy采用了以下方法 :meth:`~scrapy.http.Request.from_curl()` 来生成一个
+等效的 :class:`~scrapy.http.Request` 来自cURL命令。要获得更多信息
+请访问 :ref:`request from curl <requests-from-curl>` 内的网络工具部分。
 
-Once you get the expected response, you can :ref:`extract the desired data from
-it <topics-handling-response-formats>`.
+一旦你得到了预期的响应，你可以 :ref:`从中提取所需的数据 <topics-handling-response-formats>` 。
 
-You can reproduce any request with Scrapy. However, some times reproducing all
-necessary requests may not seem efficient in developer time. If that is your
-case, and crawling speed is not a major concern for you, you can alternatively
-consider :ref:`JavaScript pre-rendering <topics-javascript-rendering>`.
+你可以用Scrapy重现任何请求。然而，有些时候重现所有必要的请求，在开发人员的时间里可能显得不那么有效。
+如果这是你的情况，而且抓取速度对你来说不是一个主要的问题，你可以选择
+考虑 :ref:`用JavaScript进行预渲染 <topics-javascript-rendering>` 。
 
-If you get the expected response `sometimes`, but not always, the issue is
-probably not your request, but the target server. The target server might be
-buggy, overloaded, or :ref:`banning <bans>` some of your requests.
+如果你"有时"得到预期的响应，但并不总是如此，那么问题就在于
+可能不是你的请求，而是目标服务器的问题。目标服务器可能是
+错误，超载，或者 :ref:`禁止<bans>` 你的一些请求。
 
-Note that to translate a cURL command into a Scrapy request,
-you may use `curl2scrapy <https://michael-shub.github.io/curl2scrapy/>`_.
+注意，要把cURL命令翻译成Scrapy请求。
+你可以使用 `curl2scrapy <https://michael-shub.github.io/curl2scrapy/>`_ .
 
 .. _topics-handling-response-formats:
 
-Handling different response formats
+处理不同的响应格式
 ===================================
 
-Once you have a response with the desired data, how you extract the desired
-data from it depends on the type of response:
+一旦你有一个带有所需数据的响应，你如何从其中提取所需的
+数据取决于响应的类型:
 
--   If the response is HTML or XML, use :ref:`selectors
-    <topics-selectors>` as usual.
+- 如果响应是HTML或XML，使用 :ref:`selectors <topics-selectors>` ，和平常一样。
 
--   If the response is JSON, use :func:`json.loads` to load the desired data from
-    :attr:`response.text <scrapy.http.TextResponse.text>`::
+- 如果响应是JSON，使用 :func:`json.load()` 来加载想要的数据，
+  从 :attr:`response.text <scrapy.http.TextResponse.text>` :
 
-        data = json.loads(response.text)
+  ::
 
-    If the desired data is inside HTML or XML code embedded within JSON data,
-    you can load that HTML or XML code into a
-    :class:`~scrapy.selector.Selector` and then
-    :ref:`use it <topics-selectors>` as usual::
+    data = json.load(response.text)
 
-        selector = Selector(data['html'])
+  如果所需的数据是在HTML或XML代码内嵌入JSON数据,
+  你可以把这些HTML或XML代码加载到一个 :class:`~scrapy.selector.Selector` ，
+  然后 :ref:`使用它<topics-selectors>` 像往常一样。
 
--   If the response is JavaScript, or HTML with a ``<script/>`` element
-    containing the desired data, see :ref:`topics-parsing-javascript`.
+  ::
+    
+    Selector = Selector(data['html'])
 
--   If the response is CSS, use a :doc:`regular expression <library/re>` to
-    extract the desired data from
-    :attr:`response.text <scrapy.http.TextResponse.text>`.
+- 如果响应是JavaScript，或带有 ``<script/>`` 元素的HTML，其中包含所需的数据。
+  请参阅 :ref:`topics-parsing-javascript` 。
 
-.. _topics-parsing-images:
+- 如果响应是CSS，使用 :doc:`正则表达式 <library/re>` 从 :attr:`response.text <scrapy.http.TextResponse.text>` 提
+  取需要的数据。
 
--   If the response is an image or another format based on images (e.g. PDF),
-    read the response as bytes from
-    :attr:`response.body <scrapy.http.TextResponse.body>` and use an OCR
-    solution to extract the desired data as text.
+.. _topics-parsing-images。
 
-    For example, you can use pytesseract_. To read a table from a PDF,
-    `tabula-py`_ may be a better choice.
+- 如果响应是一个图像或其他基于图像的格式（例如PDF）。
+  从 :attr:`response.body <scrapy.http.TextResponse.body>` 中读取响应的字节数，
+  并使用OCR解决方案来提取所需的文本数据。
 
--   If the response is SVG, or HTML with embedded SVG containing the desired
-    data, you may be able to extract the desired data using
-    :ref:`selectors <topics-selectors>`, since SVG is based on XML.
+  例如，你可以使用 pytesseract_ 。从PDF中读取一个表格, `tabula-py`_ 可能是一个更好的选择。
 
-    Otherwise, you might need to convert the SVG code into a raster image, and
-    :ref:`handle that raster image <topics-parsing-images>`.
+- 如果响应是SVG，或者是嵌入了SVG的HTML，包含了所需的
+  数据，你就可以用 :ref:`selectors <topics-selectors>` 来提取所需的数据，因为SVG是基于XML的。
+
+  另外，你可能需要将SVG代码转换为光栅图像，并 :ref:`处理该光栅图像<topics-parsing-images>` 。
 
 .. _topics-parsing-javascript:
 
-Parsing JavaScript code
+解析JavaScript代码
 =======================
 
-If the desired data is hardcoded in JavaScript, you first need to get the
-JavaScript code:
+如果想要的数据是在JavaScript中硬编码的，你首先需要得到JavaScript编码:
 
--   If the JavaScript code is in a JavaScript file, simply read
-    :attr:`response.text <scrapy.http.TextResponse.text>`.
+- 如果JavaScript代码是在一个JavaScript文件中，只需读取 :attr:`response.text <scrapy.http.TextResponse.text>` 。
 
--   If the JavaScript code is within a ``<script/>`` element of an HTML page,
-    use :ref:`selectors <topics-selectors>` to extract the text within that
-    ``<script/>`` element.
+- 如果JavaScript代码在一个HTML页面的 ``<script/>`` 元素中。
+  使用 :ref:`selectors <topics-selectors>` 来提取 ``<script/>`` 元素中的文本。
 
-Once you have a string with the JavaScript code, you can extract the desired
-data from it:
+一旦你有了一个带有JavaScript代码的字符串，你就可以从中提取所需的数据:
 
--   You might be able to use a :doc:`regular expression <library/re>` to
-    extract the desired data in JSON format, which you can then parse with
-    :func:`json.loads`.
+- 你也许可以使用 :doc:`正则表达式 <library/re>` 以JSON格式提取所需的数据，然后你可以
+  用 :func:`json.load()` 解析:
 
-    For example, if the JavaScript code contains a separate line like
-    ``var data = {"field": "value"};`` you can extract that data as follows:
+  例如，如果JavaScript代码包含一个单独的行，像 ``var data = {"field": "value"};`` 一样,
+  你可以提取这些数据，如下所示:
+
+  :: 
 
     >>> pattern = r'\bvar\s+data\s*=\s*(\{.*?\})\s*;\s*\n'
     >>> json_data = response.css('script::text').re_first(pattern)
     >>> json.loads(json_data)
     {'field': 'value'}
 
--   chompjs_ provides an API to parse JavaScript objects into a :class:`dict`.
+- chompjs_提供了一个API，将JavaScript对象解析为 :class:`dict` 。
 
-    For example, if the JavaScript code contains
-    ``var data = {field: "value", secondField: "second value"};``
-    you can extract that data as follows:
+  例如，如果JavaScript代码包含 ``var data = {field: "value", secondField: "第二个值"};`` 你可以
+  按以下方式提取该数据:
+
+  ::
 
     >>> import chompjs
     >>> javascript = response.css('script::text').get()
     >>> data = chompjs.parse_js_object(javascript)
     >>> data
-    {'field': 'value', 'secondField': 'second value'}
+    {'field': 'value', 'secondField': 'second value'}  
 
--   Otherwise, use js2xml_ to convert the JavaScript code into an XML document
-    that you can parse using :ref:`selectors <topics-selectors>`.
+- 另外，使用 js2xml_ 将JavaScript代码转换成一个XML文档,
+  这样你就可以使用 :ref:`selectors <topics-selectors>` 来解析:
 
-    For example, if the JavaScript code contains
-    ``var data = {field: "value"};`` you can extract that data as follows:
+  例如，如果JavaScript代码包含 ``var data = {field: "value"};`` 你可以按下面的方式提取该数据:
+
+  ::
 
     >>> import js2xml
     >>> import lxml.etree
@@ -209,48 +186,39 @@ data from it:
     >>> xml = lxml.etree.tostring(js2xml.parse(javascript), encoding='unicode')
     >>> selector = Selector(text=xml)
     >>> selector.css('var[name="data"]').get()
-    '<var name="data"><object><property name="field"><string>value</string></property></object></var>'
+    '<var name="data"><object><property name="field"><string>value</string></property></object></var>'  
 
 .. _topics-javascript-rendering:
 
-Pre-rendering JavaScript
+预先渲染JavaScript
 ========================
 
-On webpages that fetch data from additional requests, reproducing those
-requests that contain the desired data is the preferred approach. The effort is
-often worth the result: structured, complete data with minimum parsing time and
-network transfer.
+在从其他请求中获取数据的网页上，复制那些包含所需数据的请求是首选方法。
+这种努力往往是值得的：结构化的、完整的数据，解析时间和网络传输最少。
 
-However, sometimes it can be really hard to reproduce certain requests. Or you
-may need something that no request can give you, such as a screenshot of a
-webpage as seen in a web browser.
+然而，有时可能真的很难重现某些请求。或者你可能需要一些任何请求都不能给你的东西，
+比如在网页浏览器中看到的网页的截图。
 
-In these cases use the Splash_ JavaScript-rendering service, along with
-`scrapy-splash`_ for seamless integration.
+在这些情况下，请使用 Splash_ 的JavaScript渲染服务，同时使用 `scrapy-splash`_ 进行无缝集成。
 
-Splash returns as HTML the :ref:`DOM <topics-livedom>` of a webpage, so that
-you can parse it with :ref:`selectors <topics-selectors>`. It provides great
-flexibility through configuration_ or scripting_.
+Splash以HTML形式返回网页的 :ref:`DOM <topics-livedom>` ，以便你可以用 :ref:`selectors <topics-selectors>` 来
+解析它。它通过 configuration_ 或 scripting_ 提供了极大的灵活性。
 
-If you need something beyond what Splash offers, such as interacting with the
-DOM on-the-fly from Python code instead of using a previously-written script,
-or handling multiple web browser windows, you might need to
-:ref:`use a headless browser <topics-headless-browsing>` instead.
+如果你需要超越Splash所提供的东西，比如从Python代码中与DOM进行即时交互，而不是使用先前写好的脚本，
+或者处理多个网络浏览器窗口，你可能
+需要使用 :ref:`使用无头浏览器<topics-headless-browsing>` 来代替。
 
 .. _configuration: https://splash.readthedocs.io/en/stable/api.html
 .. _scripting: https://splash.readthedocs.io/en/stable/scripting-tutorial.html
 
 .. _topics-headless-browsing:
 
-Using a headless browser
+使用无头浏览器
 ========================
 
-A `headless browser`_ is a special web browser that provides an API for
-automation.
+`headless browser`_ 是一种特殊的网络浏览器，为自动化提供了一个API。
 
-The easiest way to use a headless browser with Scrapy is to use Selenium_,
-along with `scrapy-selenium`_ for seamless integration.
-
+使用Scrapy的无头浏览器的最简单方法是使用 Selenium_ ，同时使用 `scrapy-selenium`_ 进行无缝集成。
 
 .. _AJAX: https://en.wikipedia.org/wiki/Ajax_%28programming%29
 .. _chompjs: https://github.com/Nykakin/chompjs
@@ -266,4 +234,4 @@ along with `scrapy-selenium`_ for seamless integration.
 .. _Splash: https://github.com/scrapinghub/splash
 .. _tabula-py: https://github.com/chezou/tabula-py
 .. _wget: https://www.gnu.org/software/wget/
-.. _wgrep: https://github.com/stav/wgrep
+.. _wgrep: https://github.com/stav/wgrep 
